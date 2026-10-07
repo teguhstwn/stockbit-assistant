@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: stockbit-assistant
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: ""
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
