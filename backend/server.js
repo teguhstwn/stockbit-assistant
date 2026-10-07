@@ -4,7 +4,9 @@ const path = require('path');
 const { handleApiRoute } = require('./routes/api');
 
 const PORT = process.env.PORT || 3000;
-const FRONTEND_DIR = path.resolve(__dirname, '..', 'frontend');
+const FRONTEND_DIR = fs.existsSync(path.resolve(__dirname, '..', 'public'))
+  ? path.resolve(__dirname, '..', 'public')
+  : path.resolve(__dirname, '..', 'frontend');
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
