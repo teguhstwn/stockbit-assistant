@@ -1,0 +1,432 @@
+/* ======================================================== */
+/* THEME SYSTEM TOKENS: Obsidian Dark & Financial Pro Light  */
+/* ======================================================== */
+:root {
+  --color-bg-base: #090d16;
+  --color-bg-card: #111726;
+  --color-bg-card-hover: #151d30;
+  --color-bg-elevated: #1a233a;
+  --color-border: #1e293b;
+  --color-border-light: #334155;
+  --color-text-main: #f8fafc;
+  --color-text-sub: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-input-bg: #0c1220;
+  --color-input-border: #1e293b;
+  --color-input-text: #f8fafc;
+  --header-bg: rgba(9, 13, 22, 0.95);
+  --bottom-nav-bg: rgba(9, 13, 22, 0.95);
+  --card-shadow: none;
+}
+
+html.light {
+  --color-bg-base: #f1f5f9;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f8fafc;
+  --color-bg-elevated: #e2e8f0;
+  --color-border: #e2e8f0;
+  --color-border-light: #cbd5e1;
+  --color-text-main: #0f172a;
+  --color-text-sub: #334155;
+  --color-text-muted: #64748b;
+  --color-input-bg: #ffffff;
+  --color-input-border: #cbd5e1;
+  --color-input-text: #0f172a;
+  --header-bg: rgba(255, 255, 255, 0.96);
+  --bottom-nav-bg: rgba(255, 255, 255, 0.96);
+  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Base Body Transition */
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-main);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.tnum {
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+/* ======================================================== */
+/* High Contrast Stock Code & Name Typography (Bulletproof) */
+/* ======================================================== */
+.stock-code-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  display: inline-block;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+html.dark .stock-code-badge,
+:root:not(.light) .stock-code-badge {
+  color: #ffffff !important; /* Murni putih terang di dark mode, anti-hitam! */
+}
+
+html.light .stock-code-badge {
+  color: #0f172a !important; /* Slate 900 kontras tinggi di light mode */
+}
+
+.stock-idx-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  vertical-align: middle;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+html.dark .stock-idx-badge,
+:root:not(.light) .stock-idx-badge {
+  color: #94a3b8 !important;
+  background-color: #090d16 !important;
+  border: 1px solid #1e293b !important;
+}
+
+html.light .stock-idx-badge {
+  color: #64748b !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.stock-name-title {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+  transition: color 0.2s ease;
+}
+
+/* Dark Mode: Emiten name is bright Slate-200 / Slate-300, NEVER black */
+html.dark .stock-name-title,
+:root:not(.light) .stock-name-title {
+  color: #cbd5e1 !important;
+}
+
+/* Light Mode: Emiten name is crisp Slate-700, sharp and readable */
+html.light .stock-name-title {
+  color: #334155 !important;
+}
+
+/* ======================================================== */
+/* Dark Mode Local Fallbacks for Tailwind Text Utilities    */
+/* ======================================================== */
+html.dark .text-slate-100,
+:root:not(.light) .text-slate-100 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-200,
+:root:not(.light) .text-slate-200 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-slate-300,
+:root:not(.light) .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-400,
+:root:not(.light) .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-slate-500,
+:root:not(.light) .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* ======================================================== */
+/* Light Mode Overrides for Tailwind Utilities              */
+/* ======================================================== */
+html.light body {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light header {
+  background-color: var(--header-bg) !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light nav {
+  background-color: var(--bottom-nav-bg) !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+html.light .bg-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+html.light .bg-base {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-elevated {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-border {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-border\/80,
+html.light .border-border\/70,
+html.light .border-border\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200 {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Inputs, Selects, Textarea */
+input, select, textarea {
+  background-color: var(--color-input-bg) !important;
+  border: 1px solid var(--color-input-border) !important;
+  color: var(--color-input-text) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  input, select, textarea {
+    font-size: 12px;
+  }
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2) !important;
+  outline: none !important;
+}
+
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Tabs Navigasi */
+.tab-item.active {
+  background-color: #1e293b;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+html.light .tab-item.active {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 600;
+}
+
+html.light .tab-item:not(.active) {
+  color: #64748b !important;
+}
+
+html.light .tab-item:not(.active):hover {
+  color: #0f172a !important;
+}
+
+/* Mobile Bottom Nav Items */
+.mobile-nav-item.active {
+  color: #38bdf8;
+}
+
+.mobile-nav-item.active svg {
+  stroke: #38bdf8;
+}
+
+html.light .mobile-nav-item:not(.active) {
+  color: #64748b !important;
+}
+
+html.light .mobile-nav-item.active {
+  color: #0284c7 !important;
+}
+
+html.light .mobile-nav-item.active svg {
+  stroke: #0284c7 !important;
+}
+
+/* Strategy Presets */
+.strat-item.active {
+  background-color: #0ea5e9;
+  color: #090d16;
+  font-weight: 700;
+}
+
+html.light .strat-item.active {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+html.light .strat-item:not(.active) {
+  color: #475569 !important;
+}
+
+html.light .strat-item:not(.active):hover {
+  color: #0f172a !important;
+}
+
+/* Footers */
+html.light footer {
+  border-top-color: #e2e8f0 !important;
+  color: #64748b !important;
+}
+
+/* Toast */
+html.light #toast {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+/* Animations */
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes flashGreen {
+  0% { background-color: rgba(16, 185, 129, 0.4); color: #34d399; }
+  100% { background-color: transparent; }
+}
+
+@keyframes flashRed {
+  0% { background-color: rgba(244, 63, 94, 0.4); color: #fb7185; }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: flashGreen 1s ease-out;
+}
+
+.flash-down {
+  animation: flashRed 1s ease-out;
+}
+
+.pulse-live {
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+button, a {
+  touch-action: manipulation;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+/* Horizontal Preset Scroll Toolbar */
+.preset-scroll-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-light) transparent;
+}
+
+.preset-scroll-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.preset-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.preset-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+
+.preset-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
+
+.active-dragging {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+html.light #stratScrollLeft,
+html.light #stratScrollRight {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+html.light #stratScrollLeft:hover,
+html.light #stratScrollRight:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+

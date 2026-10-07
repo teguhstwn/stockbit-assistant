@@ -1,0 +1,15 @@
+{
+  "name": "stockbit-assistant",
+  "version": "1.0.0",
+  "description": "Stockbit Trading Assistant & Daily Screener Realtime IHSG",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["stockbit", "ihsg", "scalping", "trading", "screener"],
+  "author": "",
+  "license": "ISC"
+}

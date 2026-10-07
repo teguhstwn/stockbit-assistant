@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Stockbit Trading Assistant – Screener & Analisis Saham IHSG</title>
+<meta name="description" content="Trading assistant & real-time IHSG screener untuk scalping dan day trading platform Stockbit. Responsif di semua perangkat.">
+<meta name="theme-color" content="#090d16">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      screens: {
+        'xs': '420px'
+      },
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace']
+      },
+      colors: {
+        base: '#090d16',
+        card: '#111726',
+        cardHover: '#151d30',
+        elevated: '#1a233a',
+        border: '#1e293b',
+        borderLight: '#334155',
+        up: '#10b981',
+        upMuted: 'rgba(16, 185, 129, 0.12)',
+        down: '#f43f5e',
+        downMuted: 'rgba(244, 63, 94, 0.12)',
+        brand: '#0ea5e9',
+        brandMuted: 'rgba(14, 165, 233, 0.12)',
+        amberMuted: 'rgba(245, 158, 11, 0.12)'
+      }
+    }
+  }
+}
+</script>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-base text-slate-100">
+
+<!-- TOP APP HEADER -->
+<header class="sticky top-0 z-40 bg-[#090d16]/95 backdrop-blur-md border-b border-border">
+  <div class="max-w-7xl mx-auto px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
+    <!-- Brand & Status -->
+    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+      <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center font-extrabold text-sm sm:text-base font-mono tracking-tight text-slate-900 shrink-0 shadow-sm">SB</div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <h1 class="text-xs sm:text-sm font-bold tracking-tight text-slate-100 truncate">Stockbit Assistant</h1>
+          <span id="backendStatusBadge" class="text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium shrink-0">REALTIME</span>
+        </div>
+        <p class="text-[10px] sm:text-[11px] text-slate-400 hidden xs:block truncate">IHSG Scalper & Day Trading Protocol</p>
+      </div>
+    </div>
+
+    <!-- Right Controls: Auto-refresh, Session, Clock -->
+    <div class="flex items-center gap-1.5 sm:gap-2.5 text-xs shrink-0">
+      <!-- Minimalist Interval Dropdown -->
+      <div class="flex items-center gap-1 sm:gap-1.5 bg-card border border-border rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5">
+        <span class="text-slate-400 text-[10px] sm:text-[11px] hidden sm:inline">Auto:</span>
+        <select id="autoRefreshInterval" class="!bg-transparent !border-0 text-slate-200 text-[11px] sm:text-xs font-mono font-medium p-0 cursor-pointer focus:!ring-0">
+          <option value="3" class="bg-card text-slate-200">3s</option>
+          <option value="5" class="bg-card text-slate-200">5s</option>
+          <option value="10" class="bg-card text-slate-200">10s</option>
+          <option value="15" class="bg-card text-slate-200">15s</option>
+          <option value="30" class="bg-card text-slate-200" selected>30s</option>
+          <option value="60" class="bg-card text-slate-200">60s</option>
+          <option value="0" class="bg-card text-slate-200">Manual</option>
+        </select>
+        <span id="countdownBadge" class="font-mono text-[9px] sm:text-[10px] bg-elevated px-1 sm:px-1.5 py-0.5 rounded text-sky-400 font-semibold min-w-[22px] sm:min-w-[24px] text-center">30s</span>
+      </div>
+
+      <!-- Refresh Button -->
+      <button id="btnRefresh" class="flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-card border border-border text-slate-300 hover:text-white hover:border-slate-700 transition" title="Refresh data sekarang">
+        <svg id="refreshIcon" class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <span class="text-[11px] font-medium hidden sm:inline">Sync</span>
+      </button>
+
+      <!-- Theme Switcher Button (Dark / Light) -->
+      <button id="themeToggleBtn" type="button" class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-card border border-border text-slate-300 hover:text-white transition cursor-pointer select-none" title="Ganti Tema (Dark / Light)">
+        <span id="themeToggleIcon" class="text-xs">☀️</span>
+        <span id="themeToggleText" class="text-[11px] font-medium hidden sm:inline">Light</span>
+      </button>
+
+      <!-- Session Indicator -->
+      <div class="flex items-center gap-1.5 bg-card border border-border px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <span id="marketStatus" class="font-medium text-[10px] sm:text-[11px] text-slate-300">—</span>
+      </div>
+
+      <span id="clock" class="font-mono text-slate-400 text-[11px] hidden md:inline"></span>
+    </div>
+  </div>
+
+  <!-- MAIN NAVIGATION TABS (Desktop & Tablet) -->
+  <div class="max-w-7xl mx-auto px-4 pb-2.5 hidden md:flex gap-1.5 overflow-x-auto text-xs no-scrollbar">
+    <button data-tab="screener" class="tab-item active px-3.5 py-1.5 rounded-lg font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5 whitespace-nowrap">
+      <span>Screener Saham</span>
+    </button>
+    <button data-tab="analyzer" class="tab-item px-3.5 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
+      <span>Analisis Saham</span>
+      <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+    </button>
+    <button data-tab="checklist" class="tab-item px-3.5 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
+      <span>Checklist & SOP</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT WRAPPER -->
+<main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 space-y-4 pb-24 md:pb-6">
+
+  <!-- ============================================================== -->
+  <!-- TAB 1: SCREENER SAHAM -->
+  <!-- ============================================================== -->
+  <section id="panel-screener" class="tab-panel space-y-4">
+    
+    <!-- Strategy Presets & Search Toolbar -->
+    <div class="bg-card border border-border rounded-xl p-3.5 space-y-3">
+      <!-- Tier 1: Horizontal Strategy Preset Tabs (Scrollable with Navigation Arrows) -->
+      <div class="relative flex items-center group w-full">
+        <!-- Left Arrow Button -->
+        <button id="stratScrollLeft" type="button" 
+          class="hidden sm:flex absolute -left-2 z-20 w-7 h-7 items-center justify-center rounded-full bg-card/95 border border-border text-slate-300 hover:text-white hover:bg-elevated shadow-lg transition active:scale-95 shrink-0" 
+          aria-label="Scroll ke kiri" title="Geser ke kiri">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+
+        <!-- Horizontal Tabs Container -->
+        <div class="flex items-center gap-2 overflow-x-auto preset-scroll-container w-full pb-1 cursor-grab select-none scroll-smooth px-1" id="stratTabs">
+          <button data-strat="all" class="strat-item active px-3.5 py-1.5 rounded-lg font-mono text-xs transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>Semua Saham</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-slate-300" id="countAll">0</span>
+          </button>
+          <button data-strat="BPJS" class="strat-item px-3.5 py-1.5 rounded-lg font-mono text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>Beli Pagi Jual Sore (BPJS)</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-amber-400 font-semibold" id="countBPJS">0</span>
+          </button>
+          <button data-strat="BSJP" class="strat-item px-3.5 py-1.5 rounded-lg font-mono text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>Beli Sore Jual Pagi (BSJP)</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-purple-400 font-semibold" id="countBSJP">0</span>
+          </button>
+          <button data-strat="BANDAR" class="strat-item px-3.5 py-1.5 rounded-lg font-mono text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>Akumulasi Bandar</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-emerald-400 font-semibold" id="countBANDAR">0</span>
+          </button>
+          <button data-strat="TOP_GAINER" class="strat-item px-3.5 py-1.5 rounded-lg font-mono text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>🔥 Calon Top Gainer</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-cyan-400 font-semibold" id="countTopGainer">0</span>
+          </button>
+          <button data-strat="SWING_REBOUND" class="strat-item px-3.5 py-1.5 rounded-lg font-mono text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-2 shrink-0">
+            <span>🌊 Swing Rebound (1-4 Mg)</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-base/60 text-indigo-400 font-semibold" id="countSwing">0</span>
+          </button>
+        </div>
+
+        <!-- Right Arrow Button -->
+        <button id="stratScrollRight" type="button" 
+          class="hidden sm:flex absolute -right-2 z-20 w-7 h-7 items-center justify-center rounded-full bg-card/95 border border-border text-slate-300 hover:text-white hover:bg-elevated shadow-lg transition active:scale-95 shrink-0" 
+          aria-label="Scroll ke kanan" title="Geser ke kanan">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Tier 2: Search Input & Filter Dropdowns (Clean Responsive Stack) -->
+      <div class="pt-2.5 border-t border-border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5">
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-md">
+          <input id="searchInput" type="text" placeholder="Cari kode saham atau nama emiten (misal: GOTO, ANTM)..." 
+            class="w-full px-3.5 py-2 rounded-lg text-xs font-mono">
+        </div>
+
+        <!-- Filter Dropdowns -->
+        <div class="grid grid-cols-2 sm:flex items-center gap-2 w-full md:w-auto">
+          <select id="riskFilter" class="px-3 py-2 rounded-lg text-xs w-full sm:w-auto font-medium">
+            <option value="all">Semua Risiko</option>
+            <option value="Low">Low Risk</option>
+            <option value="Medium">Medium Risk</option>
+            <option value="High">High Risk</option>
+          </select>
+          <select id="signalFilter" class="px-3 py-2 rounded-lg text-xs w-full sm:w-auto font-medium">
+            <option value="all">Semua Sinyal</option>
+            <option value="STRONG BUY">Strong Buy</option>
+            <option value="BUY ON BREAKOUT">Buy on Breakout</option>
+            <option value="BUY ON WEAKNESS">Buy on Weakness</option>
+            <option value="TAKE PROFIT">Take Profit</option>
+            <option value="WAIT & SEE">Wait & See</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Strategy Explainer Banner -->
+    <div id="stratBanner" class="hidden bg-elevated border border-border rounded-xl p-4 text-xs space-y-1.5">
+      <div class="flex items-center justify-between text-slate-200">
+        <b class="font-bold text-sm text-sky-400" id="stratTitle">Preset</b>
+        <span class="text-[11px] font-mono text-slate-400" id="dataTimestamp">Live Sync</span>
+      </div>
+      <p class="text-slate-300 leading-relaxed" id="stratDetail"></p>
+      <div class="text-[11px] font-mono text-slate-400 pt-1" id="stratCriteria"></div>
+    </div>
+
+    <!-- Screener Grid Cards: 1 Col on Mobile, 2 on Tablet, 3 on Desktop -->
+    <div id="stockGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- TAB 2: ANALISIS SAHAM ON-DEMAND & DOSSIER -->
+  <!-- ============================================================== -->
+  <section id="panel-analyzer" class="tab-panel hidden space-y-4">
+    <!-- Search / Input Ticker Card -->
+    <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3.5">
+      <!-- Tier 1: Section Title & Context (Full Width) -->
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="font-bold text-base text-slate-100">Diagnosa Saham On-Demand</h2>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20 font-semibold">ALL IDX TICKERS</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+          Analisis mendalam saham apa saja di BEI: struktur fraksi & likuiditas, rentang volatilitas intraday, kesesuaian strategi BPJS/BSJP/Top Gainer, Order Book 5 fraksi, Bandarmologi Smart Money, dan SOP Sesi 2.
+        </p>
+      </div>
+
+      <!-- Tier 2: Dedicated Search Bar & Action Button (Prominent & Full Width) -->
+      <form id="azForm" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <input id="azInput" type="text" placeholder="Masukkan kode saham IDX (misal: ANTM, ELSA, BBRI, GOTO)..." required maxlength="6"
+            class="w-full pl-10 pr-3.5 py-2.5 rounded-lg uppercase font-mono text-sm tracking-wider font-bold">
+        </div>
+        <button type="submit" id="azSubmitBtn"
+          class="px-5 py-2.5 rounded-lg font-semibold text-xs text-slate-900 bg-sky-400 hover:bg-sky-300 transition flex items-center justify-center gap-2 shadow-sm whitespace-nowrap shrink-0">
+          <svg id="azSpinner" class="w-3.5 h-3.5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+          <span id="azBtnText">Analisis Sekarang</span>
+          <span class="text-xs">→</span>
+        </button>
+      </form>
+
+      <!-- Tier 3: Quick Ticker Suggestions with Mini Logos -->
+      <div class="pt-3 border-t border-border flex flex-col sm:flex-row sm:items-center gap-2 text-xs w-full">
+        <div class="flex items-center gap-1.5 text-slate-400 font-medium shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+          <span class="text-[11px] font-semibold">Pilihan Cepat:</span>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 flex-1 w-full" id="azQuickChips">
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="ANTM">
+            <img src="https://assets.stockbit.com/logos/companies/ANTM.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>ANTM</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="MEDC">
+            <img src="https://assets.stockbit.com/logos/companies/MEDC.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>MEDC</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="PANI">
+            <img src="https://assets.stockbit.com/logos/companies/PANI.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>PANI</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="BRMS">
+            <img src="https://assets.stockbit.com/logos/companies/BRMS.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>BRMS</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="BUMI">
+            <img src="https://assets.stockbit.com/logos/companies/BUMI.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>BUMI</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="DEWA">
+            <img src="https://assets.stockbit.com/logos/companies/DEWA.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>DEWA</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="GOTO">
+            <img src="https://assets.stockbit.com/logos/companies/GOTO.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>GOTO</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="BBRI">
+            <img src="https://assets.stockbit.com/logos/companies/BBRI.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>BBRI</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="CUAN">
+            <img src="https://assets.stockbit.com/logos/companies/CUAN.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>CUAN</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="ELSA">
+            <img src="https://assets.stockbit.com/logos/companies/ELSA.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>ELSA</span>
+          </button>
+          <button type="button" class="az-chip px-2.5 py-1 rounded-lg bg-base border border-border text-slate-300 hover:border-sky-500/40 hover:text-sky-300 font-mono text-[11px] transition flex items-center gap-1.5 shrink-0" data-code="WIFI">
+            <img src="https://assets.stockbit.com/logos/companies/WIFI.png" class="w-3.5 h-3.5 object-contain rounded-sm" onerror="this.style.display='none'" />
+            <span>WIFI</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analyzer Content Area: Empty State / Result Dossier -->
+    <div id="azContentArea">
+      <!-- Default Initial Prompt -->
+      <div id="azEmptyState" class="bg-card border border-border rounded-xl p-8 sm:p-12 text-center space-y-4">
+        <div class="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center mx-auto text-2xl font-mono">
+          🔍
+        </div>
+        <div class="max-w-md mx-auto space-y-1.5">
+          <h3 class="font-bold text-slate-200 text-sm sm:text-base">Belum Ada Saham yang Dianalisis</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Ketik kode saham apa saja pada formulir di atas atau pilih salah satu tombol cepat seperti <b>ANTM</b>, <b>MEDC</b>, <b>BRMS</b>, atau <b>GOTO</b> untuk melihat diagnosa mendalam.
+          </p>
+        </div>
+      </div>
+
+      <!-- Result Container (Populated via JS) -->
+      <div id="azResultContainer" class="hidden space-y-4"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- TAB 3: CHECKLIST & PANDUAN EKSEKUSI -->
+  <!-- ============================================================== -->
+  <section id="panel-checklist" class="tab-panel hidden space-y-4">
+    <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+        <div>
+          <h2 class="font-bold text-base text-slate-100">8 Protokol Wajib Sebelum Eksekusi Order</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Disiplin checklist untuk mengeliminasi keputusan trading emosional & FOMO.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 font-mono" id="ckProgress">0/8</span>
+          <button id="ckReset" class="text-[11px] px-2.5 py-1 rounded border border-border hover:border-slate-700 text-slate-400 hover:text-white transition">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Checklist Progress Bar -->
+      <div class="h-1.5 bg-base rounded-full overflow-hidden border border-border">
+        <div id="ckBar" class="h-full bg-sky-400 transition-all duration-300" style="width: 0%"></div>
+      </div>
+
+      <!-- Checklist Items Responsive Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist"></div>
+
+      <!-- Verdict Banner -->
+      <div id="ckVerdict" class="p-3 rounded-lg text-xs font-semibold text-center bg-base border border-border text-slate-400">
+        Kriteria belum memadai — selesaikan checklist terlebih dahulu
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- BOTTOM MOBILE NAVIGATION BAR (Sticky Native Mobile Bar) -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#090d16]/95 backdrop-blur-xl border-t border-border flex items-center justify-around py-1.5 px-3 pb-safe md:hidden">
+  <button data-tab="screener" class="tab-item mobile-nav-item active flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition">
+    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+    <span class="text-[10px] font-medium tracking-tight">Screener</span>
+  </button>
+  <button data-tab="analyzer" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition relative">
+    <span class="absolute top-1 right-5 w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+    <span class="text-[10px] font-medium tracking-tight">Analisis Saham</span>
+  </button>
+  <button data-tab="checklist" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition">
+    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span class="text-[10px] font-medium tracking-tight">Checklist & SOP</span>
+  </button>
+</nav>
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast" class="fixed bottom-16 md:bottom-5 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 text-xs font-medium shadow-2xl transition-opacity duration-200 z-50 pointer-events-none opacity-0"></div>
+
+<!-- FOOTER -->
+<footer class="border-t border-border mt-8 py-4 text-center text-slate-500 text-[11px] pb-24 md:pb-4">
+  Stockbit Trading Assistant • Sesi Live Bursa Efek Indonesia • Real-Time Screener & Market Analysis Protocol
+</footer>
+
+<!-- MODULAR FRONTEND SCRIPTS -->
+<script src="/js/config.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/checklist.js"></script>
+<script src="/js/screener.js"></script>
+<script src="/js/analyzer.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
