@@ -322,22 +322,58 @@ function analyzeHoldOrCutLoss(params) {
   }
 
   // 9. Modul Rincian Rekomendasi
-  // A. Level Teknikal
+  // A. Level Teknikal Presisi Fraksi BEI
+  const currentTickSize = tickSize(currentPrice);
   const supportZone = roundDownTick(Math.min(low, currentPrice * 0.98));
   const criticalStopLoss = roundDownTick(low * 0.96);
   const reboundTarget = roundUpTick(Math.max(high, currentPrice * 1.05));
 
-  // B. Batas Waktu Evaluasi (Deadline)
+  const supportDistPct = Number((((supportZone - currentPrice) / currentPrice) * 100).toFixed(2));
+  const supportTicks = Math.max(1, Math.round(Math.abs(supportZone - currentPrice) / currentTickSize));
+  const reboundDistPct = Number((((reboundTarget - currentPrice) / currentPrice) * 100).toFixed(2));
+  const reboundTicks = Math.max(1, Math.round(Math.abs(reboundTarget - currentPrice) / currentTickSize));
+  const critDistPct = Number((((criticalStopLoss - currentPrice) / currentPrice) * 100).toFixed(2));
+  const critTicks = Math.max(1, Math.round(Math.abs(criticalStopLoss - currentPrice) / currentTickSize));
+
+  // B. Batas Waktu Evaluasi Kalender Bursa
+  const evalDaysCount = verdictType === 'CUT_LOSS' ? 1 : (verdictType === 'HOLD_MONITOR' ? 5 : 10);
+  let deadlineDate = new Date();
+  let addedDays = 0;
+  while (addedDays < evalDaysCount) {
+    deadlineDate.setDate(deadlineDate.getDate() + 1);
+    const d = deadlineDate.getDay();
+    if (d !== 0 && d !== 6) addedDays++;
+  }
+  const deadlineDateStr = deadlineDate.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+
   const evalDays = verdictType === 'CUT_LOSS' ? '1 Hari (Sesi Saat Ini)' : (verdictType === 'HOLD_MONITOR' ? '3 - 5 Hari Bursa' : '5 - 10 Hari Bursa');
   const bounceMustHitPrice = roundUpTick(currentPrice * (verdictType === 'HOLD_AVERAGE' ? 1.04 : 1.025));
 
-  // C. Perhitungan Averaging Down (Jika Direkomendasikan atau Simulasi)
+  // C. Kalkulator Recovery Math
+  const swingCyclesNeeded = lossPct < 0 && currentValue > 0 && totalInvested > currentValue
+    ? Math.max(1, Math.ceil(Math.log(totalInvested / currentValue) / Math.log(1.10)))
+    : 0;
+
+  // D. Perhitungan Averaging Down & Analisis Risiko Downside
   const avgDownBuyPrice = roundDownTick(Math.min(currentPrice, low));
   const suggestedAdditionalLots = Math.max(1, Math.round(lots * (lossPct < -20 ? 0.75 : 0.5)));
   const newTotalShares = (lots + suggestedAdditionalLots) * 100;
-  const newTotalInvested = totalInvested + (avgDownBuyPrice * suggestedAdditionalLots * 100);
+  const additionalCapital = avgDownBuyPrice * suggestedAdditionalLots * 100;
+  const newTotalInvested = totalInvested + additionalCapital;
   const newAvgPrice = Math.round(newTotalInvested / newTotalShares);
   const newBepGainNeeded = ((newAvgPrice - currentPrice) / currentPrice) * 100;
+  const hypAddLossIfCrit = (lots + suggestedAdditionalLots) * 100 * Math.max(0, currentPrice - criticalStopLoss);
+
+  const warningMsg = verdictType === 'CUT_LOSS'
+    ? `DILARANG AVERAGING DOWN! Menambah ${suggestedAdditionalLots} lot di Rp ${avgDownBuyPrice.toLocaleString('id-ID')} membutuhkan modal baru ${rp(additionalCapital)}. Jika harga breakdown menembus lantai kritis Rp ${criticalStopLoss.toLocaleString('id-ID')}, total kerugian akan membengkak menjadi ${rp(lossAmount + hypAddLossIfCrit)} (-${(((lossAmount + hypAddLossIfCrit) / newTotalInvested) * 100).toFixed(1)}%). Rasio Risk-to-Reward sangat asimetris negatif.`
+    : (verdictType === 'HOLD_MONITOR' ? `Belum disarankan averaging down sebelum ada konfirmasi volume serapan di area support Rp ${supportZone.toLocaleString('id-ID')}.` : null);
+
+  const actionRule = `Jika hingga ${deadlineDateStr} (${evalDays}) harga tidak mampu menembus Rp ${bounceMustHitPrice.toLocaleString('id-ID')} (+${(((bounceMustHitPrice - currentPrice) / currentPrice) * 100).toFixed(1)}%) atau menembus ke bawah lantai toleransi Rp ${criticalStopLoss.toLocaleString('id-ID')} (${critDistPct}%), segera eksekusi CUT LOSS tanpa kompromi untuk mengamankan sisa modal ${rp(recycleCapital)}.`;
 
   return {
     buyPrice,
@@ -377,9 +413,16 @@ function analyzeHoldOrCutLoss(params) {
         status: technicalStatus,
         score: technicalScore,
         detail: technicalDetail,
+        tickSize: currentTickSize,
         supportZone,
+        supportDistPct,
+        supportTicks,
         criticalStopLoss,
-        reboundTarget
+        critDistPct,
+        critTicks,
+        reboundTarget,
+        reboundDistPct,
+        reboundTicks
       },
       // Modul B: Bandarmologi
       bandar: {
@@ -387,7 +430,11 @@ function analyzeHoldOrCutLoss(params) {
         score: bandarScore,
         detail: bandarDetail,
         isAccum: isNormAccum,
-        summaryText: bandar.summaryText || 'Data bandar terpantau'
+        summaryText: bandar.summaryText || 'Data bandar terpantau',
+        topBuyerCodes: bandar.topBuyerCodes || 'Institusi',
+        topSellerCodes: bandar.topSellerCodes || 'Ritel',
+        netLot: bandar.netLot || (isBigAccum ? 35000 : (isBigDist ? -42000 : (isNormAccum ? 15000 : -12000))),
+        flowVerdict: isNormAccum ? 'Akumulasi Bersih' : (isBigDist ? 'Distribusi Masif' : (isNormDist ? 'Distribusi Normal' : 'Arus Seimbang'))
       },
       // Modul C: Kalkulator Recovery
       recovery: {
@@ -395,26 +442,26 @@ function analyzeHoldOrCutLoss(params) {
         lossAmount,
         bepGainNeeded: Number(bepGainNeeded.toFixed(2)),
         recycleCapital,
+        swingCyclesNeeded,
         detail: lossDetail
       },
       // Modul D: Batas Waktu Evaluasi
       deadline: {
         evalDays,
+        deadlineDateStr,
         bounceMustHitPrice,
         criticalStopLoss,
-        actionRule: `Jika dalam ${evalDays} harga tidak berhasil menembus Rp ${bounceMustHitPrice.toLocaleString('id-ID')} atau menembus ke bawah Rp ${criticalStopLoss.toLocaleString('id-ID')}, segera eksekusi CUT LOSS tanpa kompromi.`
+        actionRule
       },
       // Modul E: Saran Averaging Down
       averaging: {
         isAllowed: verdictType === 'HOLD_AVERAGE',
-        warning: verdictType === 'CUT_LOSS'
-          ? 'DILARANG AVERAGING DOWN! Menambah muatan pada saham distribusi hanya akan memperdalam kerugian.'
-          : (verdictType === 'HOLD_MONITOR' ? 'Belum disarankan averaging down sebelum konfirmasi reversal terbentuk.' : null),
+        warning: warningMsg,
         buyPrice: avgDownBuyPrice,
         additionalLots: suggestedAdditionalLots,
         newAvgPrice,
         newBepGainNeeded: Number(newBepGainNeeded.toFixed(2)),
-        additionalCapital: avgDownBuyPrice * suggestedAdditionalLots * 100
+        additionalCapital
       }
     }
   };

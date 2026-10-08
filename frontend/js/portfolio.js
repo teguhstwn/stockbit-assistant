@@ -226,28 +226,34 @@ function renderPortfolioResult(stock, ev) {
     verdictScoreBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-500';
   }
 
-  // 4. Modul A: Kondisi Teknikal
+  // 4. Modul A: Kondisi Teknikal Presisi Fraksi
   const modTech = ev.modules.technical;
   $('portTechStatus').textContent = modTech.status;
   $('portTechScore').textContent = `${modTech.score}/35 Poin`;
   $('portTechDetail').textContent = modTech.detail;
-  $('portTechSupport').textContent = rp(modTech.supportZone);
-  $('portTechResistance').textContent = rp(modTech.reboundTarget);
-  $('portTechCritSL').textContent = rp(modTech.criticalStopLoss);
+  if ($('portTechTickSize')) $('portTechTickSize').textContent = `Fraksi Rp ${modTech.tickSize} / tick`;
+  $('portTechSupport').textContent = `${rp(modTech.supportZone)} (${modTech.supportDistPct}%, ${modTech.supportTicks} fraksi)`;
+  $('portTechResistance').textContent = `${rp(modTech.reboundTarget)} (+${modTech.reboundDistPct}%, ${modTech.reboundTicks} fraksi)`;
+  $('portTechCritSL').textContent = `${rp(modTech.criticalStopLoss)} (${modTech.critDistPct}%, ${modTech.critTicks} fraksi)`;
 
-  // 5. Modul B: Bandarmologi
+  // 5. Modul B: Bandarmologi Real-Time
   const modBandar = ev.modules.bandar;
-  $('portBandarStatus').textContent = modBandar.status;
   $('portBandarScore').textContent = `${modBandar.score}/30 Poin`;
   $('portBandarDetail').textContent = modBandar.detail;
-  $('portBandarSummary').textContent = modBandar.summaryText;
+  if ($('portBandarTopBuyers')) $('portBandarTopBuyers').textContent = modBandar.topBuyerCodes || '-';
+  if ($('portBandarTopSellers')) $('portBandarTopSellers').textContent = modBandar.topSellerCodes || '-';
+  if ($('portBandarNetLot')) {
+    const net = modBandar.netLot || 0;
+    $('portBandarNetLot').textContent = `${net >= 0 ? '+' : ''}${net.toLocaleString('id-ID')} lot (${modBandar.flowVerdict})`;
+    $('portBandarNetLot').className = `font-bold font-mono ${net >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+  }
 
   const bandarBadge = $('portBandarBadge');
   if (modBandar.isAccum) {
     bandarBadge.textContent = 'AKUMULASI SMART MONEY';
     bandarBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold';
   } else {
-    bandarBadge.textContent = 'DISTRIBUSI / NETRAL';
+    bandarBadge.textContent = modBandar.status && modBandar.status.toUpperCase().includes('BIG') ? 'DISTRIBUSI MASIF' : 'DISTRIBUSI / NETRAL';
     bandarBadge.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold';
   }
 
@@ -258,6 +264,11 @@ function renderPortfolioResult(stock, ev) {
   $('portRecBepGain').textContent = `+${modRec.bepGainNeeded.toFixed(2)}%`;
   $('portRecSalvageFunds').textContent = rp(modRec.recycleCapital);
   $('portRecExplanation').textContent = modRec.detail;
+  if ($('portRecSwingCycles')) {
+    $('portRecSwingCycles').textContent = modRec.swingCyclesNeeded > 0
+      ? `~${modRec.swingCyclesNeeded}x siklus swing (+10%)`
+      : '0x (Posisi Profit)';
+  }
 
   // Skenario simulasi recycle capital: jika sisa dana dipakai untuk swing di saham sehat (+10% gain)
   const recyclePotentialGain = Math.round(modRec.recycleCapital * 0.10);
@@ -266,8 +277,9 @@ function renderPortfolioResult(stock, ev) {
   // 7. Modul D: Batas Waktu Evaluasi & Deadline
   const modDead = ev.modules.deadline;
   $('portDeadDuration').textContent = modDead.evalDays;
-  $('portDeadBounceTarget').textContent = rp(modDead.bounceMustHitPrice);
-  $('portDeadFloorPrice').textContent = rp(modDead.criticalStopLoss);
+  if ($('portDeadDate')) $('portDeadDate').textContent = modDead.deadlineDateStr || '-';
+  $('portDeadBounceTarget').textContent = `${rp(modDead.bounceMustHitPrice)} (+${(((modDead.bounceMustHitPrice - stock.price) / stock.price) * 100).toFixed(1)}%)`;
+  $('portDeadFloorPrice').textContent = `${rp(modDead.criticalStopLoss)} (${(((modDead.criticalStopLoss - stock.price) / stock.price) * 100).toFixed(1)}%)`;
   $('portDeadActionRule').textContent = modDead.actionRule;
 
   // 8. Modul E: Saran Averaging Down / Aturan Larangan

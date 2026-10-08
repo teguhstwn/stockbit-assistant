@@ -527,6 +527,10 @@ tailwind.config = {
               <span id="portTechStatus" class="font-bold text-slate-200 font-mono">DOWNTREND</span>
             </div>
             <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Fraksi Resmi BEI</span>
+              <span id="portTechTickSize" class="font-mono text-slate-300 font-medium">Fraksi Rp 1</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
               <span class="text-slate-400">Support Pertahanan Terdekat</span>
               <span id="portTechSupport" class="font-bold font-mono text-emerald-400">Rp 0</span>
             </div>
@@ -557,12 +561,16 @@ tailwind.config = {
               <span id="portBandarBadge" class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-base text-slate-300">NETRAL</span>
             </div>
             <div class="flex items-center justify-between py-1 border-b border-border/50">
-              <span class="text-slate-400">Klasifikasi Broker</span>
-              <span id="portBandarStatus" class="font-bold font-mono text-slate-200">Normal Accumulation</span>
+              <span class="text-slate-400">Top Broker Penampung (Buyer)</span>
+              <span id="portBandarTopBuyers" class="font-bold font-mono text-emerald-400">-</span>
             </div>
             <div class="flex items-center justify-between py-1 border-b border-border/50">
-              <span class="text-slate-400">Aktivitas Dominan</span>
-              <span id="portBandarSummary" class="text-[11px] font-mono text-slate-300 text-right truncate max-w-[200px]">-</span>
+              <span class="text-slate-400">Top Broker Pelepas (Seller)</span>
+              <span id="portBandarTopSellers" class="font-bold font-mono text-rose-400">-</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Estimasi Arus Volume Bandar</span>
+              <span id="portBandarNetLot" class="font-bold font-mono text-slate-200">0 lot</span>
             </div>
             <p id="portBandarDetail" class="text-[11px] text-slate-300 leading-relaxed bg-elevated/50 p-2.5 rounded-lg border border-border/60"></p>
           </div>
@@ -590,10 +598,14 @@ tailwind.config = {
               <span class="text-slate-400">Kenaikan Dibutuhkan untuk BEP</span>
               <span id="portRecBepGain" class="font-bold font-mono text-amber-400">+0.00%</span>
             </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Estimasi Siklus Swing Recovery (+10%)</span>
+              <span id="portRecSwingCycles" class="font-bold font-mono text-sky-400">0x siklus</span>
+            </div>
             <div class="bg-elevated/60 p-2.5 rounded-lg border border-border/60 space-y-1">
               <div class="text-[11px] font-semibold text-slate-200">⚡ Simulasi Recycle Capital:</div>
               <p class="text-[10px] text-slate-400">
-                Jika sisa modal dialihkan ke saham swing preset berpotensi gain +10%, potensi recovery dana adalah <b class="text-emerald-400 font-mono" id="portRecycleSimVal">+Rp 0</b>.
+                Jika sisa modal dialihkan ke saham swing preset berpotensi gain +10%, potensi recovery dana adalah <b class="text-emerald-400 font-mono" id="portRecycleSimVal">+Rp 0</b> per putaran trade.
               </p>
             </div>
             <p id="portRecExplanation" class="text-[11px] text-slate-300 leading-relaxed"></p>
@@ -613,6 +625,10 @@ tailwind.config = {
             <div class="flex items-center justify-between py-1 border-b border-border/50">
               <span class="text-slate-400">Jendela Waktu Pengamatan</span>
               <span id="portDeadDuration" class="font-bold font-mono text-slate-200">3 - 5 Hari Bursa</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Estimasi Tanggal Batas Evaluasi</span>
+              <span id="portDeadDate" class="font-bold font-mono text-amber-300">-</span>
             </div>
             <div class="flex items-center justify-between py-1 border-b border-border/50">
               <span class="text-slate-400">Target Pantulan Minimal</span>
