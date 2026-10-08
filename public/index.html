@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Stockbit Trading Assistant – Screener & Analisis Saham IHSG</title>
-<meta name="description" content="Trading assistant & real-time IHSG screener untuk scalping dan day trading platform Stockbit. Responsif di semua perangkat.">
+<meta name="description" content="Trading assistant & real-time IHSG screener untuk scalping, day trading, dan portofolio rescue platform Stockbit. Responsif di semua perangkat.">
 <meta name="theme-color" content="#090d16">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -107,6 +107,10 @@ tailwind.config = {
     <button data-tab="analyzer" class="tab-item px-3.5 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
       <span>Analisis Saham</span>
       <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+    </button>
+    <button data-tab="portfolio" class="tab-item px-3.5 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
+      <span>Portofolio Rescue</span>
+      <span class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">Hold vs Cutloss</span>
     </button>
     <button data-tab="checklist" class="tab-item px-3.5 py-1.5 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5 whitespace-nowrap">
       <span>Checklist & SOP</span>
@@ -321,7 +325,359 @@ tailwind.config = {
   </section>
 
   <!-- ============================================================== -->
-  <!-- TAB 3: CHECKLIST & PANDUAN EKSEKUSI -->
+  <!-- TAB 3: PORTOFOLIO RESCUE (HOLD VS CUT LOSS ANALYZER) -->
+  <!-- ============================================================== -->
+  <section id="panel-portfolio" class="tab-panel hidden space-y-4">
+    <!-- Header Card & Form Input -->
+    <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="font-bold text-base sm:text-lg text-slate-100">Portofolio Rescue: Hold vs Cut Loss</h2>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">Objektif & Anti-FOMO</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Analisis keputusan rasional berbasis data teknikal, pergerakan bandar, dan kalkulator pemulihan modal.</p>
+        </div>
+      </div>
+
+      <!-- Form Inputs: Kode Saham, Harga Beli Avg, Lot -->
+      <form id="portfolioForm" onsubmit="event.preventDefault();" class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-end">
+        <div>
+          <label class="block text-[11px] font-medium text-slate-300 mb-1">Kode Saham (Ticker)</label>
+          <input type="text" id="portTicker" placeholder="Contoh: ANTM" maxlength="6"
+            class="w-full bg-elevated border border-border rounded-lg px-3 py-2 text-xs sm:text-sm font-mono uppercase text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-slate-300 mb-1">Harga Beli Rata-Rata (Avg)</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs">Rp</span>
+            <input type="number" id="portBuyPrice" placeholder="2350" min="1" step="1"
+              class="w-full bg-elevated border border-border rounded-lg pl-9 pr-3 py-2 text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-medium text-slate-300 mb-1">Jumlah Lot Dipegang</label>
+          <input type="number" id="portLots" placeholder="50" min="1" step="1"
+            class="w-full bg-elevated border border-border rounded-lg px-3 py-2 text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+        </div>
+        <div class="sm:col-span-3 lg:col-span-1">
+          <button id="btnAnalyzePortfolio" type="button"
+            class="w-full py-2.5 px-4 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 transition cursor-pointer">
+            <svg id="portBtnSpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+            <span id="portBtnText">⚡ Analisis Hold atau Cut Loss</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Quick Preset Chips -->
+      <div class="pt-2 flex flex-wrap items-center gap-1.5 text-xs">
+        <span class="text-[11px] text-slate-400 mr-1">Coba Contoh Cepat:</span>
+        <button type="button" class="port-quick-chip px-2.5 py-1 rounded bg-elevated hover:bg-slate-700 text-slate-300 text-[11px] font-mono border border-border transition" data-ticker="ANTM" data-price="2350" data-lot="50">ANTM (Avg 2.350)</button>
+        <button type="button" class="port-quick-chip px-2.5 py-1 rounded bg-elevated hover:bg-slate-700 text-slate-300 text-[11px] font-mono border border-border transition" data-ticker="GOTO" data-price="78" data-lot="500">GOTO (Avg 78)</button>
+        <button type="button" class="port-quick-chip px-2.5 py-1 rounded bg-elevated hover:bg-slate-700 text-slate-300 text-[11px] font-mono border border-border transition" data-ticker="BBRI" data-price="4900" data-lot="25">BBRI (Avg 4.900)</button>
+        <button type="button" class="port-quick-chip px-2.5 py-1 rounded bg-elevated hover:bg-slate-700 text-slate-300 text-[11px] font-mono border border-border transition" data-ticker="ASII" data-price="5400" data-lot="20">ASII (Avg 5.400)</button>
+      </div>
+    </div>
+
+    <!-- Empty State Prompt -->
+    <div id="portEmptyState" class="bg-card border border-border rounded-xl p-8 sm:p-12 text-center space-y-4">
+      <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto text-2xl font-mono">
+        🛡️
+      </div>
+      <div class="max-w-md mx-auto space-y-1.5">
+        <h3 class="font-bold text-slate-200 text-sm sm:text-base">Audit Posisi Portofolio Anda</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          Masukkan kode saham yang sedang merugi/nyangkut, harga beli rata-rata, dan jumlah lot untuk memperoleh rekomendasi rasional: <b>Cut Loss</b>, <b>Hold & Pantau</b>, atau <b>Hold & Averaging Down</b>.
+        </p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="portErrorState" class="hidden bg-card border border-rose-500/30 rounded-xl p-6 text-center space-y-3">
+      <div class="w-10 h-10 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto text-lg">⚠️</div>
+      <h4 class="font-bold text-slate-200 text-sm">Gagal Mengambil Data</h4>
+      <p id="portErrorMsg" class="text-xs text-rose-300"></p>
+    </div>
+
+    <!-- Result Container (Hidden until analyzed) -->
+    <div id="portResultContainer" class="hidden space-y-4">
+      <!-- 1. Live Position & Stock Header Card -->
+      <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
+          <div class="flex items-center gap-3">
+            <span id="portResCode" class="text-xl sm:text-2xl font-black font-mono text-slate-100">ANTM</span>
+            <div>
+              <div class="text-xs sm:text-sm font-semibold text-slate-300" id="portResName">Aneka Tambang Tbk</div>
+              <div class="text-[11px] text-slate-400">Harga Live Bursa: <span id="portResLivePrice" class="font-mono font-bold text-slate-100">Rp 0</span></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="portResDayChg" class="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">+0.0%</span>
+            <button onclick="runPortfolioAnalysis()" class="p-1.5 rounded-lg bg-elevated hover:bg-slate-700 text-slate-300 transition" title="Refresh kalkulasi">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Key Financial Metrics -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          <div class="bg-elevated/70 border border-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400 font-medium">Modal Pembelian Awal</div>
+            <div id="portValInvested" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-0.5">Rp 0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Avg: <span id="portValAvgPrice" class="font-mono text-slate-300">Rp 0</span></div>
+          </div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400 font-medium">Nilai Portofolio Sekarang</div>
+            <div id="portValCurrent" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-0.5">Rp 0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5"><span id="portValShares" class="font-mono text-slate-300">0 lot</span></div>
+          </div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400 font-medium">Floating Loss / Profit</div>
+            <div id="portValPnL" class="text-sm sm:text-base font-bold font-mono text-rose-400 mt-0.5">-Rp 0 (-0.0%)</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Unrealized PnL</div>
+          </div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3">
+            <div class="text-[10px] text-slate-400 font-medium">Sisa Modal Jika Cut Loss</div>
+            <div id="portRecSalvageFunds" class="text-sm sm:text-base font-bold font-mono text-sky-400 mt-0.5">Rp 0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Recycle Capital Siap Pakai</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Main Verdict Banner -->
+      <div id="portVerdictBanner" class="p-5 sm:p-6 rounded-2xl bg-card border-2 border-border relative overflow-hidden shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div id="portVerdictIcon" class="p-2.5 rounded-xl bg-base/60 shrink-0 border border-border"></div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 rounded bg-base/80 text-slate-300 border border-border">VERDICT RESMI</span>
+                <span id="portVerdictConfidence" class="text-[10px] font-mono text-slate-300 font-semibold">Tingkat Keyakinan: 0%</span>
+              </div>
+              <h3 id="portVerdictTitle" class="text-xl sm:text-2xl font-black text-slate-100 tracking-tight mt-1">HOLD & PANTAU KETAT</h3>
+              <p id="portVerdictSummary" class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed"></p>
+            </div>
+          </div>
+
+          <div class="shrink-0 bg-base/70 border border-border rounded-xl p-3 sm:p-4 min-w-[160px] text-right">
+            <div class="text-[10px] text-slate-400 font-medium">Skor Kelayakan Hold</div>
+            <div id="portVerdictScoreVal" class="text-xl sm:text-2xl font-mono font-black text-slate-100 mt-0.5">0/100</div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full mt-2 overflow-hidden">
+              <div id="portVerdictScoreBar" class="h-full bg-sky-400 rounded-full transition-all duration-500" style="width: 50%"></div>
+            </div>
+            <div class="text-[9px] text-slate-400 mt-1">&ge;65 Hold+Avg &bull; &lt;35 Cutloss</div>
+          </div>
+        </div>
+
+        <!-- 4 Dimension Score Badges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-4 border-t border-border/60 text-xs">
+          <div class="bg-base/40 rounded-lg p-2 border border-border/40">
+            <div class="text-[10px] text-slate-400">Teknikal & Trend</div>
+            <div id="portScoreTech" class="font-mono font-bold text-slate-200 mt-0.5">0/35</div>
+          </div>
+          <div class="bg-base/40 rounded-lg p-2 border border-border/40">
+            <div class="text-[10px] text-slate-400">Bandarmologi</div>
+            <div id="portScoreBandar" class="font-mono font-bold text-slate-200 mt-0.5">0/30</div>
+          </div>
+          <div class="bg-base/40 rounded-lg p-2 border border-border/40">
+            <div class="text-[10px] text-slate-400">Toleransi Kerugian</div>
+            <div id="portScoreLoss" class="font-mono font-bold text-slate-200 mt-0.5">0/20</div>
+          </div>
+          <div class="bg-base/40 rounded-lg p-2 border border-border/40">
+            <div class="text-[10px] text-slate-400">Likuiditas & Volume</div>
+            <div id="portScoreVol" class="font-mono font-bold text-slate-200 mt-0.5">0/15</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. The 5 Analysis Modules Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Modul A: Kondisi Teknikal -->
+        <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-border">
+            <div class="flex items-center gap-2">
+              <span class="text-base">📉</span>
+              <h4 class="font-bold text-sm text-slate-200">Modul A: Kondisi Teknikal & Support</h4>
+            </div>
+            <span id="portTechScore" class="text-[11px] font-mono font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">0/35 Poin</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Status Trend Saat Ini</span>
+              <span id="portTechStatus" class="font-bold text-slate-200 font-mono">DOWNTREND</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Support Pertahanan Terdekat</span>
+              <span id="portTechSupport" class="font-bold font-mono text-emerald-400">Rp 0</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Lantai Cut Loss Kritis (Breakdown)</span>
+              <span id="portTechCritSL" class="font-bold font-mono text-rose-400">Rp 0</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Target Pantulan Rebound</span>
+              <span id="portTechResistance" class="font-bold font-mono text-sky-400">Rp 0</span>
+            </div>
+            <p id="portTechDetail" class="text-[11px] text-slate-300 leading-relaxed bg-elevated/50 p-2.5 rounded-lg border border-border/60"></p>
+          </div>
+        </div>
+
+        <!-- Modul B: Bandarmologi Real-Time -->
+        <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-border">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🏦</span>
+              <h4 class="font-bold text-sm text-slate-200">Modul B: Bandarmologi Real-Time</h4>
+            </div>
+            <span id="portBandarScore" class="text-[11px] font-mono font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">0/30 Poin</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Status Aliran Smart Money</span>
+              <span id="portBandarBadge" class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-base text-slate-300">NETRAL</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Klasifikasi Broker</span>
+              <span id="portBandarStatus" class="font-bold font-mono text-slate-200">Normal Accumulation</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Aktivitas Dominan</span>
+              <span id="portBandarSummary" class="text-[11px] font-mono text-slate-300 text-right truncate max-w-[200px]">-</span>
+            </div>
+            <p id="portBandarDetail" class="text-[11px] text-slate-300 leading-relaxed bg-elevated/50 p-2.5 rounded-lg border border-border/60"></p>
+          </div>
+        </div>
+
+        <!-- Modul C: Kalkulator Kerugian & Dana Recovery -->
+        <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-border">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🧮</span>
+              <h4 class="font-bold text-sm text-slate-200">Modul C: Kalkulator Recovery & BEP</h4>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-elevated text-slate-300 border border-border">BEP Math</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Tingkat Kerugian Posisi</span>
+              <span id="portRecLossPct" class="font-bold font-mono text-rose-400">-0.00%</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Nominal Kerugian Saat Ini</span>
+              <span id="portRecLossNominal" class="font-bold font-mono text-rose-400">Rp 0</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Kenaikan Dibutuhkan untuk BEP</span>
+              <span id="portRecBepGain" class="font-bold font-mono text-amber-400">+0.00%</span>
+            </div>
+            <div class="bg-elevated/60 p-2.5 rounded-lg border border-border/60 space-y-1">
+              <div class="text-[11px] font-semibold text-slate-200">⚡ Simulasi Recycle Capital:</div>
+              <p class="text-[10px] text-slate-400">
+                Jika sisa modal dialihkan ke saham swing preset berpotensi gain +10%, potensi recovery dana adalah <b class="text-emerald-400 font-mono" id="portRecycleSimVal">+Rp 0</b>.
+              </p>
+            </div>
+            <p id="portRecExplanation" class="text-[11px] text-slate-300 leading-relaxed"></p>
+          </div>
+        </div>
+
+        <!-- Modul D: Batas Waktu Evaluasi (Deadline) -->
+        <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-border">
+            <div class="flex items-center gap-2">
+              <span class="text-base">⏱️</span>
+              <h4 class="font-bold text-sm text-slate-200">Modul D: Batas Waktu Evaluasi (Deadline)</h4>
+            </div>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">Toleransi Waktu</span>
+          </div>
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Jendela Waktu Pengamatan</span>
+              <span id="portDeadDuration" class="font-bold font-mono text-slate-200">3 - 5 Hari Bursa</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Target Pantulan Minimal</span>
+              <span id="portDeadBounceTarget" class="font-bold font-mono text-emerald-400">Rp 0</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-b border-border/50">
+              <span class="text-slate-400">Batas Toleransi Turun Maksimal</span>
+              <span id="portDeadFloorPrice" class="font-bold font-mono text-rose-400">Rp 0</span>
+            </div>
+            <div class="bg-rose-950/20 border border-rose-500/30 p-2.5 rounded-lg text-rose-300 text-[11px] leading-relaxed">
+              <div class="font-bold text-rose-200 mb-0.5">⚠️ Aturan Eksekusi Tegas:</div>
+              <span id="portDeadActionRule"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modul E: Saran Averaging Down / Aturan Larangan (Full Width) -->
+      <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-border">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎯</span>
+            <h4 class="font-bold text-sm text-slate-200">Modul E: Panduan Averaging Down & Penurunan BEP</h4>
+          </div>
+        </div>
+
+        <!-- Box 1: Averaging Allowed -->
+        <div id="portAvgAllowedBox" class="space-y-3">
+          <p class="text-xs text-slate-300">
+            Kondisi saham memenuhi syarat untuk averaging down terukur karena adanya akumulasi Smart Money atau support kuat.
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+            <div class="bg-elevated/70 border border-border rounded-lg p-2.5">
+              <div class="text-[10px] text-slate-400">Harga Beli Averaging</div>
+              <div id="portAvgBuyPrice" class="font-mono font-bold text-emerald-400 text-sm mt-0.5">Rp 0</div>
+              <div class="text-[9px] text-slate-400">Area Support</div>
+            </div>
+            <div class="bg-elevated/70 border border-border rounded-lg p-2.5">
+              <div class="text-[10px] text-slate-400">Tambahan Lot Disarankan</div>
+              <div id="portAvgAddLots" class="font-mono font-bold text-sky-400 text-sm mt-0.5">+0 lot</div>
+              <div class="text-[9px] text-slate-400">Modal Baru: <span id="portAvgAddCapital" class="text-slate-300">Rp 0</span></div>
+            </div>
+            <div class="bg-elevated/70 border border-border rounded-lg p-2.5">
+              <div class="text-[10px] text-slate-400">Avg Price Baru (Setelah Avg)</div>
+              <div id="portAvgNewAvg" class="font-mono font-bold text-slate-100 text-sm mt-0.5">Rp 0</div>
+              <div class="text-[9px] text-slate-400">Jauh Lebih Murah</div>
+            </div>
+            <div class="bg-elevated/70 border border-border rounded-lg p-2.5">
+              <div class="text-[10px] text-slate-400">Target BEP Baru</div>
+              <div id="portAvgNewBep" class="font-mono font-bold text-emerald-400 text-sm mt-0.5">+0.0%</div>
+              <div class="text-[9px] text-slate-400">Beban Recovery Berkurang</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box 2: Averaging Forbidden (Peringatan Keras) -->
+        <div id="portAvgForbiddenBox" class="hidden bg-rose-950/30 border border-rose-500/40 p-4 rounded-xl space-y-2">
+          <div class="flex items-center gap-2 text-rose-300 font-bold text-sm">
+            <span>🚫</span>
+            <span>PERINGATAN: DILARANG MELAKUKAN AVERAGING DOWN!</span>
+          </div>
+          <p id="portAvgForbiddenMsg" class="text-xs text-rose-200/90 leading-relaxed"></p>
+          <div class="text-[11px] text-rose-300/80 bg-rose-900/30 p-2.5 rounded-lg border border-rose-800/40">
+            <b>Prinsip Manajemen Risiko:</b> Averaging down pada saham yang berada di fase distribusi Smart Money atau kerugian &gt;30% ibarat <i>menangkap pisau jatuh (catching a falling knife)</i>. Langkah paling bijak adalah membatasi kerugian dan mengalokasikan sisa modal ke peluang baru yang lebih sehat.
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Footer: Print/Copy Summary & Disclaimer -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-card border border-border rounded-xl text-xs">
+        <div class="text-slate-400 text-[11px] leading-relaxed">
+          <b>Disclaimer:</b> Rekomendasi dihitung otomatis berdasarkan data teknikal intraday BEI dan estimasi bandarmologi Yahoo Finance. Bukan anjuran investasi mutlak. Disiplin trading Anda adalah penentu profitabilitas.
+        </div>
+        <button onclick="copy(`Diagnosa Saham ${currentPortfolioData?.stock?.code}: Verdict ${currentPortfolioData?.eval?.verdict} (Keyakinan: ${currentPortfolioData?.eval?.confidence}%, Floating Loss: ${currentPortfolioData?.eval?.lossPct}%)`)" class="shrink-0 px-3 py-1.5 rounded-lg bg-elevated hover:bg-slate-700 text-slate-200 font-medium transition flex items-center gap-1.5 cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+          <span>Salin Ringkasan</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- TAB 4: CHECKLIST & PANDUAN EKSEKUSI -->
   <!-- ============================================================== -->
   <section id="panel-checklist" class="tab-panel hidden space-y-4">
     <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-4">
@@ -356,19 +712,24 @@ tailwind.config = {
 </main>
 
 <!-- BOTTOM MOBILE NAVIGATION BAR (Sticky Native Mobile Bar) -->
-<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#090d16]/95 backdrop-blur-xl border-t border-border flex items-center justify-around py-1.5 px-3 pb-safe md:hidden">
-  <button data-tab="screener" class="tab-item mobile-nav-item active flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition">
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#090d16]/95 backdrop-blur-xl border-t border-border flex items-center justify-around py-1.5 px-2 pb-safe md:hidden">
+  <button data-tab="screener" class="tab-item mobile-nav-item active flex flex-col items-center justify-center py-1.5 px-3 text-slate-400 hover:text-slate-200 transition">
     <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
     <span class="text-[10px] font-medium tracking-tight">Screener</span>
   </button>
-  <button data-tab="analyzer" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition relative">
-    <span class="absolute top-1 right-5 w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+  <button data-tab="analyzer" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-3 text-slate-400 hover:text-slate-200 transition relative">
+    <span class="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-sky-400"></span>
     <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-    <span class="text-[10px] font-medium tracking-tight">Analisis Saham</span>
+    <span class="text-[10px] font-medium tracking-tight">Analisis</span>
   </button>
-  <button data-tab="checklist" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-4 text-slate-400 hover:text-slate-200 transition">
+  <button data-tab="portfolio" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-3 text-slate-400 hover:text-slate-200 transition relative">
+    <span class="absolute top-1 right-3 w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+    <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+    <span class="text-[10px] font-medium tracking-tight">Porto Rescue</span>
+  </button>
+  <button data-tab="checklist" class="tab-item mobile-nav-item flex flex-col items-center justify-center py-1.5 px-3 text-slate-400 hover:text-slate-200 transition">
     <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    <span class="text-[10px] font-medium tracking-tight">Checklist & SOP</span>
+    <span class="text-[10px] font-medium tracking-tight">Checklist</span>
   </button>
 </nav>
 
@@ -377,7 +738,7 @@ tailwind.config = {
 
 <!-- FOOTER -->
 <footer class="border-t border-border mt-8 py-4 text-center text-slate-500 text-[11px] pb-24 md:pb-4">
-  Stockbit Trading Assistant • Sesi Live Bursa Efek Indonesia • Real-Time Screener & Market Analysis Protocol
+  Stockbit Trading Assistant • Sesi Live Bursa Efek Indonesia • Real-Time Screener, Market Analysis & Portfolio Rescue Protocol
 </footer>
 
 <!-- MODULAR FRONTEND SCRIPTS -->
@@ -386,6 +747,7 @@ tailwind.config = {
 <script src="/js/checklist.js"></script>
 <script src="/js/screener.js"></script>
 <script src="/js/analyzer.js"></script>
+<script src="/js/portfolio.js"></script>
 <script src="/js/app.js"></script>
 </body>
 </html>

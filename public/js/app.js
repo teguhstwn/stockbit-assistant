@@ -105,8 +105,6 @@ function applyTheme(theme) {
   const textEl = $('themeToggleText');
   if (iconEl) iconEl.textContent = isDark ? '☀️' : '🌙';
   if (textEl) textEl.textContent = isDark ? 'Light' : 'Dark';
-
-  // Perbarui grafik compounding jika sudah terinisialisasi
 }
 
 function toggleTheme() {
@@ -149,6 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initChecklist();
   initScreener();
   initAnalyzer();
+  if (typeof initPortfolio === 'function') {
+    initPortfolio();
+  }
 
   // Initial Runs
   renderChecks();

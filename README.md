@@ -1,26 +1,42 @@
 # Stockbit Trading Assistant (Realtime IHSG) 🚀
 
-Aplikasi web modern, cepat, dan responsif untuk membantu trader serta investor saham Bursa Efek Indonesia (IDX/IHSG) dalam melakukan **screening real-time**, **analisis bandarmologi**, **pengujian strategi trading (BPJS, BSJP, Calon Top Gainer, & Swing Rebound)**, membaca **Order Book 5 Fraksi**, serta menyusun **Trading Plan presisi fraksi BEI**.
+Aplikasi web modern, cepat, dan responsif untuk membantu trader serta investor saham Bursa Efek Indonesia (IDX/IHSG) dalam melakukan **screening real-time**, **analisis bandarmologi**, **pengujian strategi trading (BPJS, BSJP, Calon Top Gainer, & Swing Rebound)**, membaca **Order Book 5 Fraksi**, menyusun **Trading Plan presisi fraksi BEI**, serta **Portofolio Rescue (Evaluasi Hold vs Cut Loss)**.
 
 ![Stockbit Trading Assistant](https://img.shields.io/badge/Platform-IDX%20%2F%20IHSG-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
 ![License](https://img.shields.io/badge/License-ISC-orange)
 ![Dependency](https://img.shields.io/badge/Dependencies-Zero%20(Pure%20Native)-brightgreen)
+![Deployment](https://img.shields.io/badge/Vercel-Deployed-black)
 
 ---
 
 ## 🌟 Fitur Unggulan
 
-### 1. 🌓 Dual Theme: Obsidian Dark & Clean Light Mode
+### 1. 🛡️ Portofolio Rescue: Hold vs Cut Loss Analyzer *(Fitur Terbaru)*
+Solusi objektif dan anti-FOMO untuk menentukan langkah rasional terhadap saham portofolio yang sedang merugi/nyangkut:
+- **Input Fleksibel**: Cukup masukkan kode saham, harga beli rata-rata (*Avg Price*), dan jumlah lot. Tersedia tombol contoh cepat (*quick presets*).
+- **Official Verdict**: Rekomendasi tegas bergradasi warna:
+  - 🔴 **CUT LOSS SEKARANG**: Kerugian berat, tren bearish menembus support, atau distribusi Smart Money aktif.
+  - 🟡 **HOLD & PANTAU KETAT**: Konsolidasi bertahan di support, kerugian masih terkelola, pasang trigger disiplin.
+  - 🟢 **HOLD & AVERAGING DOWN**: Diskon sehat dengan akumulasi Smart Money atau bantalan support kuat.
+- **Logika Override (Veto Rules)**: Memaksa vonis *Cut Loss* jika kerugian > -50% (butuh > +100% untuk BEP) atau terdeteksi distribusi institusi besar (*Big Distribution*).
+- **5 Modul Analisis Komprehensif**:
+  - **Modul A (Kondisi Teknikal & Support)**: Tren intraday, support pertahanan terdekat, lantai cut loss kritis, dan target pantulan.
+  - **Modul B (Bandarmologi Real-Time)**: Aliran Smart Money (*Big/Normal Accumulation vs Distribution*).
+  - **Modul C (Kalkulator Recovery & BEP)**: Persentase gain wajib untuk balik modal (BEP) dan simulasi *Recycle Capital* (sisa dana yang bisa diselamatkan untuk trading di peluang baru).
+  - **Modul D (Batas Waktu Evaluasi / Deadline)**: Durasi observasi (1–5 hari bursa), target rebound minimal yang harus disentuh, dan batas toleransi penurunan maksimal.
+  - **Modul E (Panduan Averaging Down / Aturan Larangan)**: Simulasi harga beli tambahan, tambahan lot, average price baru yang lebih rendah, serta target BEP baru yang lebih ringan; atau peringatan tegas *"DILARANG AVERAGING DOWN"* (menangkap pisau jatuh).
+
+### 2. 🌓 Dual Theme: Obsidian Dark & Clean Light Mode
 - Desain antarmuka finansial modern dengan kontras tinggi (*high contrast*).
 - Menghilangkan bug teks hitam di tema gelap — nama emiten dan ticker selalu terbaca jelas, tajam, dan elegan di semua perangkat.
 - Tombol sakelar tema instan di bilah navigasi atas dengan penyimpanan preferensi otomatis.
 
-### 2. 📱 100% Responsif & Mobile Native
+### 3. 📱 100% Responsif & Mobile Native
 - Optimal di semua ukuran layar: smartphone Android/iOS, tablet, laptop, hingga monitor desktop lebar (1920p).
-- Dilengkapi **Bottom Navigation Bar** *sticky* khusus perangkat mobile untuk navigasi cepat layaknya aplikasi native.
+- Dilengkapi **Bottom Navigation Bar** *sticky* khusus perangkat mobile untuk navigasi cepat layaknya aplikasi native (Screener, Analisis, Porto Rescue, Checklist).
 
-### 3. 🎯 5 Preset Strategi Dinamis dengan Horizontal Scroll Toolbar
+### 4. 🎯 5 Preset Strategi Dinamis dengan Horizontal Scroll Toolbar
 Bilah preset dilengkapi fitur **scroll horizontal interaktif** (mendukung putaran *mouse wheel* samping, *click & drag to scroll*, tombol panah navigasi `<` `>`, serta usapan jari di layar sentuh).
 - **Semua Saham (49 Saham Likuid)**: Bebas batasan nominal modal — mencakup Big Banks (BBCA, BBRI, BMRI, BBNI), Bluechip (ASII, TLKM, UNTR), komoditas energi (ADRO, PTBA, ANTM, MEDC), hingga saham momentum tinggi (AMMN, PANI, BREN, CUAN, GOTO, BRMS).
 - **Beli Pagi Jual Sore (BPJS)**: Scalping intraday memanfaatkan volatilitas *Day Range* ≥ 2.5% dan volume aktif untuk mengejar target profit +3% hingga +5% sebelum sesi 2 ditutup.
@@ -29,7 +45,7 @@ Bilah preset dilengkapi fitur **scroll horizontal interaktif** (mendukung putara
 - **🔥 Calon Top Gainer Besok**: Mendeteksi fase awal *markup/breakout* penutupan sesi 2 (Chg +1.2% s/d +9.0%, closing di pucuk tanpa ekor atas panjang, volume melonjak, dan akumulasi bandar aktif).
 - **🌊 Swing Rebound (1–4 Minggu)**: Strategi *Buy on Weakness* untuk saham yang berada di fase diskon/koreksi sehat (% Chg ≤ +1.0% atau menguji support kunci) namun diakumulasi senyap oleh Smart Money, dengan target TP1 (+10%), TP2 (+18%), dan Stop Loss (-4%).
 
-### 4. 🔍 Modul Diagnosa & Analisis Saham Komprehensif (Stock Dossier)
+### 5. 🔍 Modul Diagnosa & Analisis Saham Komprehensif (Stock Dossier)
 Ketik kode saham apa saja di bursa (contoh: `ANTM`, `BBRI`, `GOTO`, `MEDC`, `PANI`) untuk memuat dossier analisis 4 pilar lengkap:
 - **Streaming Live Ticker**: Interval pembaruan dinamis (3 detik, 5 detik, 10 detik) dengan animasi perubahan harga (*price flash* up/down).
 - **Pilar 1: Momentum & Rentang Harga Intraday**: Posisi harga terkini di dalam rentang Low–High harian.
@@ -39,7 +55,7 @@ Ketik kode saham apa saja di bursa (contoh: `ANTM`, `BBRI`, `GOTO`, `MEDC`, `PAN
 - **Order Book 5 Fraksi & Market Depth**: Visualisasi bar antrian Bid vs Offer 5 fraksi teratas bursa beserta rasio ketebalan bantalan beli vs jual.
 - **SOP Eksekusi Sesi 2 & BTST**: Rangkuman disiplin aksi jam krusial bursa (15:30, 15:45, 15:50, dan 09:00 WIB).
 
-### 5. 📋 8 Protokol Wajib Pre-Order Checklist
+### 6. 📋 8 Protokol Wajib Pre-Order Checklist
 - Checklist interaktif kedisiplinan trading sebelum menekan tombol beli di aplikasi sekuritas untuk mengeliminasi keputusan emosional dan FOMO.
 
 ---
@@ -65,58 +81,8 @@ Lalu buka browser Anda di `http://localhost:3000`.
 
 ---
 
-## 🌐 Cara Deploy ke Cloud (Online Gratis di Render.com)
+## 🌐 Deployment (Vercel & Cloud)
 
-Aplikasi ini sudah dilengkapi berkas konfigurasi **`render.yaml`** sehingga siap di-deploy online secara gratis:
-
-1. Buat akun / masuk ke [dashboard.render.com](https://dashboard.render.com) menggunakan akun GitHub Anda.
-2. Klik tombol **New +** -> pilih **Web Service**.
-3. Hubungkan repositori GitHub Anda: **`teguhstwn/stockbit-assistant`**.
-4. Konfigurasi otomatis:
-   - **Name**: `stockbit-assistant`
-   - **Region**: Singapore *(latensi bursa terendah)*
-   - **Runtime**: Node
-   - **Start Command**: `node server.js`
-   - **Instance Type**: Free
-5. Klik **Deploy Web Service**.
-6. Dalam 1–2 menit, aplikasi Anda sudah live online dengan URL HTTPS gratis (misal: `https://stockbit-assistant.onrender.com`) dan dapat diakses dari smartphone dari mana saja!
-
----
-
-## 🏗️ Struktur Proyek
-
-```
-stockbit-assistant/
-├── backend/
-│   ├── config/
-│   │   └── universe.js        # Konfigurasi 49 emiten likuid IHSG & master broker
-│   ├── routes/
-│   │   └── api.js             # API router (/api/stocks, /api/quote, /api/analyze)
-│   ├── services/
-│   │   ├── bandarmologi.js    # Mesin kalkulasi bandarmologi & akumulasi broker
-│   │   ├── orderBook.js       # Generator simulasi kedalaman antrian Order Book 5 fraksi
-│   │   ├── strategyEngine.js  # Algoritma klasifikasi BPJS, BSJP, Top Gainer, & Swing
-│   │   └── yahooFinance.js    # Integrasi realtime quote & caching layer
-│   └── server.js              # Native HTTP server & static file serving
-├── frontend/
-│   ├── css/
-│   │   └── styles.css         # Design system, tema Obsidian/Light, custom scrollbar
-│   ├── js/
-│   │   ├── analyzer.js        # Logika modul analisa dossier, streaming interval, order book
-│   │   ├── app.js             # Tab switcher, market session clock, & theme toggler
-│   │   ├── checklist.js       # Manajemen state checklist SOP
-│   │   ├── config.js          # Pengaturan fee transaksi sekuritas
-│   │   ├── screener.js        # Render kartu saham, dynamic filtering, & horizontal scroll
-│   │   └── utils.js           # Matriks fraksi harga IDX, kalkulator TP/SL & target swing
-│   └── index.html             # Antarmuka SPA utama
-├── .gitignore
-├── package.json
-├── render.yaml                # Render cloud blueprint deployment
-├── server.js                  # Entrypoint wrapper root
-└── start.bat                  # One-click launcher Windows
-```
-
----
-
-## ⚠️ Disclaimer
-Aplikasi ini dikembangkan untuk tujuan edukasi, asistensi analisis, dan perencanaan trading mandiri. Keputusan jual-beli instrumen saham sepenuhnya merupakan tanggung jawab masing-masing trader (*Do Your Own Research*).
+Aplikasi ini telah dikonfigurasi untuk deployment otomatis (CI/CD) ke **Vercel**:
+- Setiap perubahan yang di-*push* ke branch `main` GitHub akan secara otomatis terdeploy ke produksi di Vercel:
+  👉 **`https://stockbit-assistant.vercel.app/`**
