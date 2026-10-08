@@ -157,6 +157,22 @@ function renderPortfolioResult(stock, ev) {
   $('portResCode').textContent = stock.code;
   $('portResName').textContent = stock.name || stock.code;
   $('portResLivePrice').textContent = rp(stock.price);
+
+  const logoEl = $('portResLogo');
+  const fallbackEl = $('portResLogoFallback');
+  if (logoEl) {
+    logoEl.style.display = 'block';
+    logoEl.src = `https://assets.stockbit.com/logos/companies/${stock.code}.png`;
+    logoEl.alt = stock.code;
+  }
+  if (fallbackEl) {
+    fallbackEl.classList.add('hidden');
+    fallbackEl.textContent = stock.code.slice(0, 2);
+  }
+  const sectorEl = $('portResSector');
+  if (sectorEl) {
+    sectorEl.textContent = stock.sector || 'Saham IDX';
+  }
   
   const chgEl = $('portResDayChg');
   const isDayUp = (stock.chgPercent || 0) >= 0;

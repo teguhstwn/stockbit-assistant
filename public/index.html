@@ -405,8 +405,15 @@ tailwind.config = {
       <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
           <div class="flex items-center gap-3">
-            <span id="portResCode" class="text-xl sm:text-2xl font-black font-mono text-slate-100">ANTM</span>
+            <div class="w-12 h-12 rounded-xl bg-base border border-border flex items-center justify-center overflow-hidden shrink-0 p-1.5 shadow-sm">
+              <img id="portResLogo" src="" alt="" class="w-full h-full object-contain rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');" />
+              <span id="portResLogoFallback" class="hidden font-mono text-sm font-bold text-slate-300">--</span>
+            </div>
             <div>
+              <div class="flex items-center gap-2">
+                <span id="portResCode" class="text-xl sm:text-2xl font-black font-mono text-slate-100">ANTM</span>
+                <span id="portResSector" class="text-[10px] font-mono px-2 py-0.5 rounded bg-elevated text-slate-300 border border-border">Saham IDX</span>
+              </div>
               <div class="text-xs sm:text-sm font-semibold text-slate-300" id="portResName">Aneka Tambang Tbk</div>
               <div class="text-[11px] text-slate-400">Harga Live Bursa: <span id="portResLivePrice" class="font-mono font-bold text-slate-100">Rp 0</span></div>
             </div>
@@ -421,24 +428,36 @@ tailwind.config = {
 
         <!-- 4 Key Financial Metrics -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-          <div class="bg-elevated/70 border border-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400 font-medium">Modal Pembelian Awal</div>
-            <div id="portValInvested" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-0.5">Rp 0</div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Modal Pembelian Awal</span>
+              <span class="text-xs">💰</span>
+            </div>
+            <div id="portValInvested" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-1">Rp 0</div>
             <div class="text-[10px] text-slate-400 mt-0.5">Avg: <span id="portValAvgPrice" class="font-mono text-slate-300">Rp 0</span></div>
           </div>
-          <div class="bg-elevated/70 border border-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400 font-medium">Nilai Portofolio Sekarang</div>
-            <div id="portValCurrent" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-0.5">Rp 0</div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Nilai Portofolio Sekarang</span>
+              <span class="text-xs">📊</span>
+            </div>
+            <div id="portValCurrent" class="text-sm sm:text-base font-bold font-mono text-slate-100 mt-1">Rp 0</div>
             <div class="text-[10px] text-slate-400 mt-0.5"><span id="portValShares" class="font-mono text-slate-300">0 lot</span></div>
           </div>
-          <div class="bg-elevated/70 border border-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400 font-medium">Floating Loss / Profit</div>
-            <div id="portValPnL" class="text-sm sm:text-base font-bold font-mono text-rose-400 mt-0.5">-Rp 0 (-0.0%)</div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Floating Loss / Profit</span>
+              <span class="text-xs">📉</span>
+            </div>
+            <div id="portValPnL" class="text-sm sm:text-base font-bold font-mono text-rose-400 mt-1">-Rp 0 (-0.0%)</div>
             <div class="text-[10px] text-slate-400 mt-0.5">Unrealized PnL</div>
           </div>
-          <div class="bg-elevated/70 border border-border rounded-lg p-3">
-            <div class="text-[10px] text-slate-400 font-medium">Sisa Modal Jika Cut Loss</div>
-            <div id="portRecSalvageFunds" class="text-sm sm:text-base font-bold font-mono text-sky-400 mt-0.5">Rp 0</div>
+          <div class="bg-elevated/70 border border-border rounded-lg p-3 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium">Sisa Modal Jika Cut Loss</span>
+              <span class="text-xs">🛡️</span>
+            </div>
+            <div id="portRecSalvageFunds" class="text-sm sm:text-base font-bold font-mono text-sky-400 mt-1">Rp 0</div>
             <div class="text-[10px] text-slate-400 mt-0.5">Recycle Capital Siap Pakai</div>
           </div>
         </div>
