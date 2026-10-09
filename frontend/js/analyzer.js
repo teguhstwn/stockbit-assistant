@@ -321,17 +321,17 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
         <div class="grid grid-cols-3 gap-2 text-xs font-mono tnum">
           <div class="bg-emerald-500/5 border border-emerald-500/20 rounded p-2.5 text-emerald-400">
             <div class="text-[10px] text-slate-400 font-sans">Target 1 (+3% Net)</div>
-            <div class="text-base font-bold mt-0.5">${tg.p1}</div>
+            <div class="text-base font-bold mt-0.5 text-emerald-400">${tg.p1}</div>
             <div class="text-[10px] text-emerald-400 font-sans mt-0.5">+${tg.r1Pct}% Net</div>
           </div>
           <div class="bg-emerald-500/5 border border-emerald-500/20 rounded p-2.5 text-emerald-400">
             <div class="text-[10px] text-slate-400 font-sans">Target 2 (+5% Net)</div>
-            <div class="text-base font-bold mt-0.5">${tg.p2}</div>
+            <div class="text-base font-bold mt-0.5 text-emerald-400">${tg.p2}</div>
             <div class="text-[10px] text-emerald-400 font-sans mt-0.5">+${tg.r2Pct}% Net</div>
           </div>
           <div class="bg-rose-500/5 border border-rose-500/20 rounded p-2.5 text-rose-400">
             <div class="text-[10px] text-slate-400 font-sans">Stop Loss (-${((x.sl || 0.02) * 100).toFixed(1)}%)</div>
-            <div class="text-base font-bold mt-0.5">${tg.ps}</div>
+            <div class="text-base font-bold mt-0.5 text-rose-400">${tg.ps}</div>
             <div class="text-[10px] text-rose-400 font-sans mt-0.5">${tg.rsPct}% Net</div>
           </div>
         </div>
