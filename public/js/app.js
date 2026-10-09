@@ -105,6 +105,10 @@ function applyTheme(theme) {
   const textEl = $('themeToggleText');
   if (iconEl) iconEl.textContent = isDark ? '☀️' : '🌙';
   if (textEl) textEl.textContent = isDark ? 'Light' : 'Dark';
+
+  if (typeof window.onThemeChanged === 'function') {
+    window.onThemeChanged(theme);
+  }
 }
 
 function toggleTheme() {

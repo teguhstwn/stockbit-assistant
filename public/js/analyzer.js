@@ -49,8 +49,177 @@ function generateOrderBookClient(price, volumeLot, chgPercent) {
   };
 }
 
-// Merender Seluruh Dossier Analisis Saham (Header, 4 Pilar, Order Book, Bandarmologi, SOP Sesi 2)
-function renderAnalysisDossier(x, preservedBuyPrice = null) {
+// State & Konfigurasi Grafik Interaktif TradingView
+let currentTvTicker = null;
+let currentTvInterval = 'D';
+
+function initTradingViewChart(symbol, interval = 'D', forceReload = false) {
+  const container = $('tv_chart_container');
+  if (!container) return;
+
+  if (!forceReload && currentTvTicker === symbol && currentTvInterval === interval && container.hasChildNodes() && container.querySelector('iframe')) {
+    return;
+  }
+
+  currentTvTicker = symbol;
+  currentTvInterval = interval;
+
+  const isLight = document.documentElement.classList.contains('light');
+
+  // Loading state yang elegan
+  container.innerHTML = `
+    <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2.5 bg-[#090d16]">
+      <div class="w-8 h-8 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>
+      <span class="text-xs font-mono font-medium text-slate-200">Memuat Grafik Real-Time IDX:${symbol}...</span>
+      <span class="text-[10px] text-slate-400 font-sans">Candlestick • Timeframe ${interval === 'D' ? 'Harian (1D)' : (interval === 'W' ? 'Mingguan (1W)' : interval + ' Menit')} • TradingView</span>
+    </div>
+  `;
+
+  const buildWidget = () => {
+    if (typeof TradingView === 'undefined' || !TradingView.widget) return;
+    container.innerHTML = '';
+    try {
+      new TradingView.widget({
+        autosize: true,
+        symbol: `IDX:${symbol}`,
+        interval: interval,
+        timezone: 'Asia/Jakarta',
+        theme: isLight ? 'light' : 'dark',
+        style: '1',
+        locale: 'id',
+        toolbar_bg: isLight ? '#ffffff' : '#111726',
+        enable_publishing: false,
+        allow_symbol_change: true,
+        container_id: 'tv_chart_container',
+        hide_side_toolbar: false,
+        withdateranges: true,
+        save_image: true,
+        studies: [
+          'MASimple@tv-basicstudies',
+          'RSI@tv-basicstudies'
+        ],
+        overrides: isLight ? {} : {
+          'paneProperties.background': '#090d16',
+          'paneProperties.vertGridProperties.color': 'rgba(30, 41, 59, 0.4)',
+          'paneProperties.horzGridProperties.color': 'rgba(30, 41, 59, 0.4)'
+        }
+      });
+    } catch (e) {
+      console.error('TradingView init error:', e);
+    }
+  };
+
+  if (typeof TradingView !== 'undefined' && TradingView.widget) {
+    buildWidget();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://s3.tradingview.com/tv.js';
+    s.async = true;
+    s.onload = buildWidget;
+    document.head.appendChild(s);
+  }
+}
+
+window.switchTvInterval = function(interval) {
+  if (!currentAnalyzed) return;
+  initTradingViewChart(currentAnalyzed.code, interval, true);
+
+  document.querySelectorAll('.tv-interval-btn').forEach(btn => {
+    const active = btn.dataset.interval === interval;
+    btn.className = `tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${
+      active ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'
+    }`;
+  });
+};
+
+window.onThemeChanged = function() {
+  if (currentAnalyzed && currentTvTicker) {
+    initTradingViewChart(currentTvTicker, currentTvInterval, true);
+  }
+};
+
+// Optimasi background polling tanpa menghancurkan iframe grafik
+function updateLiveDossierMetrics(x, preservedBuyPrice = null) {
+  currentAnalyzed = x;
+  const isUp = (x.chgPercent || 0) >= 0;
+  const ob = x.orderbook || generateOrderBookClient(x.price, x.volumeLot, x.chgPercent);
+
+  // 1. Live Price & Change
+  const livePriceEl = $('azLivePrice');
+  if (livePriceEl) livePriceEl.textContent = `Rp ${x.price.toLocaleString('id-ID')}`;
+
+  const liveChgEl = $('azLiveChange');
+  if (liveChgEl) {
+    liveChgEl.className = `font-mono text-xs sm:text-lg font-bold ${isUp ? 'text-emerald-400' : 'text-rose-400'} tnum`;
+    liveChgEl.innerHTML = `${pct(x.chgPercent || 0)} <span class="hidden sm:inline text-xs font-normal">(${x.chgPrice >= 0 ? '+' : ''}${x.chgPrice || 0})</span>`;
+  }
+
+  const liveSigEl = $('azLiveSig');
+  if (liveSigEl) {
+    liveSigEl.className = `inline-block mt-0.5 text-[10px] sm:text-xs font-mono font-semibold px-2 py-0.5 sm:py-1 rounded ${sigStyle[x.sig] || sigStyle['WAIT & SEE']} truncate`;
+    liveSigEl.textContent = x.sig;
+  }
+
+  const timestampEl = $('azLiveTickTimestamp');
+  if (timestampEl) {
+    timestampEl.textContent = `Terakhir: ${ob.tickTime || new Date().toLocaleTimeString('id-ID') + ' WIB'}`;
+  }
+
+  // 2. Chart Key Levels Strip
+  if ($('chartKeyOpen')) $('chartKeyOpen').textContent = rp(x.open || x.price);
+  if ($('chartKeyHigh')) $('chartKeyHigh').textContent = rp(x.high || x.price);
+  if ($('chartKeyLow')) $('chartKeyLow').textContent = rp(x.low || x.price);
+  if ($('chartKeyPrevClose')) $('chartKeyPrevClose').textContent = rp(x.prevClose || x.price);
+
+  // 3. Order Book Strip & Rows
+  if ($('obRatioVal')) {
+    const obRatioVal = $('obRatioVal');
+    obRatioVal.className = `font-bold px-2.5 py-1 rounded bg-base border border-border ${ob.totalBidLot >= ob.totalOfferLot ? 'text-emerald-400' : 'text-rose-400'}`;
+    obRatioVal.textContent = `${ob.ratio} : 1`;
+  }
+  if ($('obBidPctTxt')) $('obBidPctTxt').textContent = `BID ${ob.bidPct}% (${ob.totalBidLot.toLocaleString('id-ID')} lot)`;
+  if ($('obOfferPctTxt')) $('obOfferPctTxt').textContent = `(${ob.totalOfferLot.toLocaleString('id-ID')} lot) OFFER ${ob.offerPct}%`;
+  if ($('obBidBar')) $('obBidBar').style.width = `${ob.bidPct}%`;
+  if ($('obOfferBar')) $('obOfferBar').style.width = `${ob.offerPct}%`;
+  if ($('obTableBody')) {
+    $('obTableBody').innerHTML = [0, 1, 2, 3, 4].map(idx => {
+      const b = ob.bids[idx] || { price: 0, lot: 0, barPct: 0 };
+      const o = ob.offers[idx] || { price: 0, lot: 0, barPct: 0 };
+      return `
+        <tr class="hover:bg-slate-800/30 transition text-xs">
+          <td class="p-2.5 text-right font-mono text-emerald-300 relative">
+            <div class="absolute inset-y-0 right-0 bg-emerald-500/15 rounded-l transition-all duration-500 pointer-events-none" style="width: ${b.barPct || 0}%;"></div>
+            <span class="relative z-10 font-medium">${(b.lot || 0).toLocaleString('id-ID')}</span>
+          </td>
+          <td class="p-2.5 text-right font-mono font-bold text-slate-100 border-r border-border/80">${b.price || '—'}</td>
+          <td class="p-2.5 text-left font-mono font-bold text-slate-100 border-l border-border/80">${o.price || '—'}</td>
+          <td class="p-2.5 text-left font-mono text-rose-300 relative">
+            <div class="absolute inset-y-0 left-0 bg-rose-500/15 rounded-r transition-all duration-500 pointer-events-none" style="width: ${o.barPct || 0}%;"></div>
+            <span class="relative z-10 font-medium">${(o.lot || 0).toLocaleString('id-ID')}</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+  if ($('obTotalBidFoot')) $('obTotalBidFoot').textContent = ob.totalBidLot.toLocaleString('id-ID');
+  if ($('obTotalOfferFoot')) $('obTotalOfferFoot').textContent = ob.totalOfferLot.toLocaleString('id-ID');
+  if ($('obVerdictTxt')) $('obVerdictTxt').textContent = ob.verdict;
+
+  // 4. Update SOP preview
+  const buyInp = $('sopBuyPrice');
+  const buyVal = buyInp ? (+buyInp.value || 0) : (preservedBuyPrice || 0);
+  if (buyVal > 0) {
+    updateSopCalculator(x, buyVal);
+  }
+}
+
+// Merender Seluruh Dossier Analisis Saham (Header, Grafik, 4 Pilar, Order Book, Bandarmologi, SOP Sesi 2)
+function renderAnalysisDossier(x, preservedBuyPrice = null, isBackground = false) {
+  if (isBackground && $('tv_chart_container') && currentAnalyzed && currentAnalyzed.code === x.code) {
+    updateLiveDossierMetrics(x, preservedBuyPrice);
+    return;
+  }
+
   currentAnalyzed = x;
   const tg = calcTradingTargets(x.price, x.sl || 0.02);
   const tgSwing = calcSwingTargets(x.price, 0.04);
@@ -165,6 +334,66 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
             <svg id="azSyncIcon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
             <span class="hidden sm:inline">Sync</span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.5 INTERACTIVE TECHNICAL CHART (TRADINGVIEW IDX) -->
+    <div class="bg-card border border-border rounded-xl p-4 sm:p-5 space-y-3.5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs font-mono">
+            📈
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+              <span>Grafik Teknikal & Candlestick</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-base text-emerald-400 border border-emerald-500/20 font-semibold">IDX:${x.code}</span>
+            </h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Chart interaktif real-time TradingView (Candlestick, Volume, Moving Averages & Indikator BEI)</p>
+          </div>
+        </div>
+
+        <!-- Timeframe Quick Switcher & External Link -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <div class="flex items-center bg-base border border-border rounded-lg p-0.5 text-xs font-mono" id="tvIntervalPicker">
+            <button type="button" onclick="switchTvInterval('1')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === '1' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="1">1m</button>
+            <button type="button" onclick="switchTvInterval('5')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === '5' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="5">5m</button>
+            <button type="button" onclick="switchTvInterval('15')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === '15' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="15">15m</button>
+            <button type="button" onclick="switchTvInterval('60')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === '60' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="60">1H</button>
+            <button type="button" onclick="switchTvInterval('D')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === 'D' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="D">1D</button>
+            <button type="button" onclick="switchTvInterval('W')" class="tv-interval-btn px-2 py-1 rounded text-[11px] font-medium transition ${currentTvInterval === 'W' ? 'bg-sky-500 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-200'}" data-interval="W">1W</button>
+          </div>
+          <a href="https://www.tradingview.com/symbols/IDX-${x.code}/" target="_blank" rel="noopener noreferrer"
+            class="px-2.5 py-1 rounded-lg bg-elevated hover:bg-slate-700 text-slate-300 hover:text-white border border-border text-[11px] font-mono flex items-center gap-1 transition"
+            title="Buka full chart di TradingView">
+            <span>TradingView ↗</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Chart Frame Container -->
+      <div class="relative w-full rounded-xl overflow-hidden border border-border bg-[#090d16] shadow-inner" style="height: 460px;">
+        <div id="tv_chart_container" class="w-full h-full"></div>
+      </div>
+
+      <!-- Quick Chart Key Levels Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono tnum pt-1">
+        <div class="bg-base border border-border/80 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-slate-400 font-sans text-[10px]">Open:</span>
+          <span id="chartKeyOpen" class="font-bold text-slate-200">${rp(x.open || x.price)}</span>
+        </div>
+        <div class="bg-base border border-border/80 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-slate-400 font-sans text-[10px]">High Intraday:</span>
+          <span id="chartKeyHigh" class="font-bold text-emerald-400">${rp(x.high || x.price)}</span>
+        </div>
+        <div class="bg-base border border-border/80 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-slate-400 font-sans text-[10px]">Low Intraday:</span>
+          <span id="chartKeyLow" class="font-bold text-rose-400">${rp(x.low || x.price)}</span>
+        </div>
+        <div class="bg-base border border-border/80 rounded-lg p-2 flex items-center justify-between">
+          <span class="text-slate-400 font-sans text-[10px]">Prev Close:</span>
+          <span id="chartKeyPrevClose" class="font-bold text-slate-300">${rp(x.prevClose || x.price)}</span>
         </div>
       </div>
     </div>
@@ -383,7 +612,7 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
         </div>
         <div class="flex items-center gap-3 font-mono text-xs">
           <span class="text-slate-400 text-[11px]">Rasio Bid/Offer:</span>
-          <span class="font-bold px-2.5 py-1 rounded bg-base border border-border ${ob.totalBidLot >= ob.totalOfferLot ? 'text-emerald-400' : 'text-rose-400'}">${ob.ratio} : 1</span>
+          <span id="obRatioVal" class="font-bold px-2.5 py-1 rounded bg-base border border-border ${ob.totalBidLot >= ob.totalOfferLot ? 'text-emerald-400' : 'text-rose-400'}">${ob.ratio} : 1</span>
         </div>
       </div>
 
@@ -391,17 +620,15 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
       <div class="space-y-1.5">
         <div class="flex justify-between text-[11px] font-mono">
           <span class="text-emerald-400 font-semibold flex items-center gap-1">
-            <span>BID ${ob.bidPct}%</span>
-            <span class="text-slate-500 font-normal">(${ob.totalBidLot.toLocaleString('id-ID')} lot)</span>
+            <span id="obBidPctTxt">BID ${ob.bidPct}% (${ob.totalBidLot.toLocaleString('id-ID')} lot)</span>
           </span>
           <span class="text-rose-400 font-semibold flex items-center gap-1">
-            <span class="text-slate-500 font-normal">(${ob.totalOfferLot.toLocaleString('id-ID')} lot)</span>
-            <span>OFFER ${ob.offerPct}%</span>
+            <span id="obOfferPctTxt">(${ob.totalOfferLot.toLocaleString('id-ID')} lot) OFFER ${ob.offerPct}%</span>
           </span>
         </div>
         <div class="h-2 bg-slate-900 rounded-full overflow-hidden flex border border-border">
-          <div class="bg-emerald-500 transition-all duration-500" style="width: ${ob.bidPct}%"></div>
-          <div class="bg-rose-500 transition-all duration-500" style="width: ${ob.offerPct}%"></div>
+          <div id="obBidBar" class="bg-emerald-500 transition-all duration-500" style="width: ${ob.bidPct}%"></div>
+          <div id="obOfferBar" class="bg-rose-500 transition-all duration-500" style="width: ${ob.offerPct}%"></div>
         </div>
       </div>
 
@@ -422,15 +649,15 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y border-border">
+          <tbody class="divide-y border-border" id="obTableBody">
             ${obRowsHtml}
           </tbody>
           <tfoot class="border-t border-border bg-card/40 font-bold text-[10px] sm:text-[11px]">
             <tr>
-              <td class="p-1.5 sm:p-2.5 text-right text-emerald-400">${ob.totalBidLot.toLocaleString('id-ID')}</td>
+              <td id="obTotalBidFoot" class="p-1.5 sm:p-2.5 text-right text-emerald-400">${ob.totalBidLot.toLocaleString('id-ID')}</td>
               <td class="p-1.5 sm:p-2.5 text-right text-slate-400 border-r border-border/80 font-sans">Total Bid</td>
               <td class="p-1.5 sm:p-2.5 text-left text-slate-400 border-l border-border/80 font-sans">Total Offer</td>
-              <td class="p-1.5 sm:p-2.5 text-left text-rose-400">${ob.totalOfferLot.toLocaleString('id-ID')}</td>
+              <td id="obTotalOfferFoot" class="p-1.5 sm:p-2.5 text-left text-rose-400">${ob.totalOfferLot.toLocaleString('id-ID')}</td>
             </tr>
           </tfoot>
         </table>
@@ -440,7 +667,7 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
       <div class="p-3 rounded-lg bg-base border border-border text-[11px] flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <span class="w-1.5 h-1.5 rounded-full ${ob.totalBidLot >= ob.totalOfferLot ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
-          <span class="text-slate-300">${ob.verdict}</span>
+          <span id="obVerdictTxt" class="text-slate-300">${ob.verdict}</span>
         </div>
         <span class="font-mono text-slate-500 text-[10px]">Spread Fraksi: Rp ${tickSize(x.price)}</span>
       </div>
@@ -715,6 +942,9 @@ function renderAnalysisDossier(x, preservedBuyPrice = null) {
       if (currentAnalyzedTicker) fetchLiveTickerData(currentAnalyzedTicker, true);
     };
   }
+
+  // Inisialisasi TradingView Interactive Chart untuk emiten ini
+  initTradingViewChart(x.code, currentTvInterval);
 }
 
 // Menghitung Ulang Posisi Floating P/L & Ribbon SOP
@@ -802,7 +1032,7 @@ async function fetchLiveTickerData(symbol, isBackground = false) {
       ? +existingBuyInp.value || null
       : null;
 
-    renderAnalysisDossier(data, savedBuyPrice);
+    renderAnalysisDossier(data, savedBuyPrice, isBackground);
     if (emptyState) emptyState.classList.add('hidden');
     if (resultContainer) resultContainer.classList.remove('hidden');
 

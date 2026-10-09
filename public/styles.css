@@ -454,3 +454,29 @@ html.light #stratScrollRight:hover {
   color: #0f172a !important;
 }
 
+/* ======================================================== */
+/* TradingView Candlestick Chart Enhancements               */
+/* ======================================================== */
+#tv_chart_container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#tv_chart_container iframe {
+  border-radius: 0.5rem;
+}
+
+.tv-interval-btn {
+  user-select: none;
+  touch-action: manipulation;
+}
+
+html.light .tv-interval-btn:not(.bg-sky-500) {
+  color: #475569 !important;
+}
+
+html.light .tv-interval-btn:not(.bg-sky-500):hover {
+  color: #0f172a !important;
+}
+
